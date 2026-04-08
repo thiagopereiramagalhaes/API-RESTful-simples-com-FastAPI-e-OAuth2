@@ -1,11 +1,11 @@
-from fastapi import FastAPI, HTTPException, Depends, status
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi import FastAPI, HTTPException, Depends, status, Security
+from fastapi.security import OAuth2PasswordRequestForm, SecurityScopes
 from typing import List
 from models import Produto, ProdutoCriar, ProdutoAtualizar, Token
 from database import inicializar_banco
 from repository import RepositorioProduto, RepositorioUsuario
 from services import ServicoProduto, ErroDeNegocio
-from security import oauth2_scheme, verificar_senha, criar_token_acesso
+from security import oauth2_scheme, verificar_senha, criar_token_acesso, verificar_permissoes
 
 app = FastAPI(title = "API de Produtos Autenticada",
               version = "1.0.0",
@@ -16,6 +16,7 @@ def obter_servico_produto():
     repositorio = RepositorioProduto()
     servico = ServicoProduto(repositorio)
     return servico
+        
 
 @app.on_event("startup")
 async def iniciar():
@@ -33,7 +34,13 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
             headers={"WWW-Authenticate": "Bearer"},
         )
         
-    token_acesso = criar_token_acesso(dados={"sub": usuario["username"]})
+    if usuario["username"] == "admin":
+        permissoes = ["read", "write", "delete"]
+        
+    else:
+        permissoes = ["read", "write"]
+        
+    token_acesso = criar_token_acesso(dados={"sub": usuario["username"], "scopes": permissoes})
     return {"access_token": token_acesso, "token_type": "bearer"}
 
     
@@ -43,16 +50,16 @@ def main():
 
 @app.get("/produtos", response_model=List[Produto], tags=["Produtos"])
 def listar_produtos(
-    servico: ServicoProduto = Depends(obter_servico_produto),
-    token: str = Depends(oauth2_scheme)
+    current_user: str = Security(verificar_permissoes, scopes=["read"]),
+    servico: ServicoProduto = Depends(obter_servico_produto)
 ):
     return servico.listar()
 
 @app.get("/produtos/{produto_id}", response_model=Produto, tags=["Produtos"])
 def obter_produto(
     produto_id: int,
-    servico: ServicoProduto = Depends(obter_servico_produto),
-    token: str = Depends(oauth2_scheme)
+    current_user: str = Security(verificar_permissoes, scopes=["read"]),
+    servico: ServicoProduto = Depends(obter_servico_produto)
 ):
     try:
         return servico.obter(produto_id)
@@ -62,8 +69,8 @@ def obter_produto(
 @app.post("/produtos", response_model=Produto, status_code=status.HTTP_201_CREATED, tags=["Produtos"])
 def criar_produto(
     dto: ProdutoCriar,
-    servico: ServicoProduto = Depends(obter_servico_produto),
-    token: str = Depends(oauth2_scheme)
+    current_user: str = Security(verificar_permissoes, scopes=["write"]),
+    servico: ServicoProduto = Depends(obter_servico_produto)
 ):
     return servico.criar(dto)
 
@@ -71,8 +78,8 @@ def criar_produto(
 def atualizar_produto(
     produto_id: int,
     dto: ProdutoAtualizar,
-    servico: ServicoProduto = Depends(obter_servico_produto),
-    token: str = Depends(oauth2_scheme)
+    current_user: str = Security(verificar_permissoes, scopes=["write"]),
+    servico: ServicoProduto = Depends(obter_servico_produto)
 ):
     try:
         return servico.atualizar(produto_id=produto_id, dto=dto)
@@ -82,8 +89,8 @@ def atualizar_produto(
 @app.delete("/produtos/{produto_id}", status_code=status.HTTP_204_NO_CONTENT, tags=["Produtos"])
 def excluir_produto(
     produto_id: int,
-    servico: ServicoProduto = Depends(obter_servico_produto),
-    token: str = Depends(oauth2_scheme)
+    current_user: str = Security(verificar_permissoes, scopes=["delete"]),
+    servico: ServicoProduto = Depends(obter_servico_produto)
 ):
     try:
         servico.excluir(produto_id)

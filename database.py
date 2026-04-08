@@ -50,11 +50,12 @@ def inicializar_banco():
                     );
                     """)
         
-        try:
-            con.execute("""
+        con.execute("""
                         INSERT INTO usuarios (username, hashed_password) VALUES (?, ?)
                         """, ("admin", obter_hash_senha(PASSWORD_ADMIN))
                         )
             
-        except:
-            pass
+        con.execute("""
+                        INSERT INTO usuarios (username, hashed_password) VALUES (?, ?)
+                        """, ("usuario", obter_hash_senha(PASSWORD_ADMIN))
+                        )
