@@ -4,12 +4,13 @@ Ele inclui funções para hash de senhas, verificação de senhas e criação de
 Ele também define um esquema OAuth2 para integração com o FastAPI.
 """
 
-from datetime import datetime, timedelta
-from passlib.context import CryptContext
-from jose import JWTError, jwt
-from fastapi.security import OAuth2PasswordBearer
 import os
+from datetime import datetime, timedelta, timezone
+
 from dotenv import load_dotenv
+from fastapi.security import OAuth2PasswordBearer
+from jose import JWTError, jwt
+from passlib.context import CryptContext  # noqa: F401
 
 load_dotenv()  # Carrega as variáveis de ambiente do arquivo .env   
 
@@ -35,6 +36,6 @@ def obter_hash_senha(senha):
 def criar_token_acesso(dados: dict):
     # Função para criar o token de acesso
     dados_para_codificar = dados.copy()
-    expiracao = datetime.now(datetime.timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    expiracao = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     dados_para_codificar.update({"exp": expiracao})
     return jwt.encode(dados_para_codificar, SECRET_KEY, algorithm=ALGORITHM)

@@ -3,7 +3,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from typing import List
 from models import Produto, ProdutoCriar, ProdutoAtualizar, Token
 from database import inicializar_banco
-from repository import RepositorioProduto
+from repository import RepositorioProduto, RepositorioUsuario
 from services import ServicoProduto, ErroDeNegocio
 from security import oauth2_scheme, verificar_senha, criar_token_acesso
 
