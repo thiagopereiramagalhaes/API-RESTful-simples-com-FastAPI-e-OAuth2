@@ -7,10 +7,20 @@ from database import inicializar_banco
 from repository import RepositorioProduto, RepositorioUsuario
 from services import ServicoProduto, ErroDeNegocio
 from security import oauth2_scheme, verificar_senha, criar_token_acesso, verificar_permissoes
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Código a ser executado na inicialização do aplicativo
+    inicializar_banco()
+    yield
+    # Código a ser executado na finalização do aplicativo (se necessário)   
+    
 
 app = FastAPI(title = "API de Produtos Autenticada",
               version = "1.0.0",
-              description = "API para gerenciamento de produtos com autenticação via OAuth2"
+              description = "API para gerenciamento de produtos com autenticação via OAuth2",
+              lifespan=lifespan
 )
 
 origins = ["*"]
@@ -29,9 +39,7 @@ def obter_servico_produto():
     return servico
         
 
-@app.on_event("startup")
-async def iniciar():
-    inicializar_banco()
+
     
 @app.post("/token", response_model=Token, tags=["Autenticação"])
 def login(form_data: OAuth2PasswordRequestForm = Depends()):

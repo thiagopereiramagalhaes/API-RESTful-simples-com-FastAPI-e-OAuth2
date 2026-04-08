@@ -217,3 +217,8 @@ database.db
 .db
 database.db
 .vscode/settings.json
+test.py
+test_main.py
+*test.py
+__init__.py
+__main__.py

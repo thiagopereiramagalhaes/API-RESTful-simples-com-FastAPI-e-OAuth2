@@ -10,10 +10,10 @@ from typing import Optional
 class ProdutoBase(BaseModel):
     #... (Ellipsis): Indica que o campo é obrigatório
     #example: Define o valor que aparecerá automaticamente como exemplo no Swagger (/docs).
-    nome: str = Field(..., example="Mouse sem fio")
-    preco: float = Field(..., example=99.90)
-    descricao: Optional[str] = Field(None, example="Um mouse sem fio com alta precisão.")
-    
+    nome: str = Field(..., json_schema_extra={"example":"Mouse sem fio"})
+    preco: float = Field(..., json_schema_extra={"example":99.90})
+    descricao: Optional[str] = Field(None, json_schema_extra={"example": "Um mouse sem fio com alta precisão."})
+
     @field_validator("nome")
     def nome_nao_vazio(cls, value):
         if not value or not value.strip():
@@ -63,7 +63,7 @@ class ProdutoAtualizar(ProdutoBase):
     pass
 
 class Produto(ProdutoBase):
-    id: int = Field(..., example=1)
+    id: int = Field(..., json_schema_extra={"example":1})
     
     
 class Token(BaseModel):
