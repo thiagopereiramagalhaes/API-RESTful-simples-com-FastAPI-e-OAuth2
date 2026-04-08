@@ -1,6 +1,13 @@
 from fastapi.testclient import TestClient
 from main import app
 
+import os
+from dotenv import load_dotenv
+
+load_dotenv()  # Carrega as variáveis de ambiente do arquivo .env   
+
+# Configurações do JWT
+PASSWORD_ADMIN = os.getenv("PASSWORD_ADMIN")
 
 client = TestClient(app)
 
@@ -13,7 +20,7 @@ def test_login_sucesso():
     """Deve retornar um token para credenciais válidas"""
     response = client.post(
         "/token",
-        data={"username": "admin", "password": "thigasapi111"}
+        data={"username": "admin", "password": PASSWORD_ADMIN}
     )
     assert response.status_code == 200
     assert "access_token" in response.json()
@@ -21,7 +28,7 @@ def test_login_sucesso():
 def test_criar_produto_com_preco_invalido():
     """Deve validar o Field(gt=0) do Pydantic"""
     # Primeiro obtemos o token...
-    login_res = client.post("/token", data={"username": "admin", "password": "thigasapi111"})
+    login_res = client.post("/token", data={"username": "admin", "password": PASSWORD_ADMIN})
     token = login_res.json()["access_token"]
     
     # Tentamos criar com preço zero
