@@ -42,3 +42,12 @@ class RepositorioProduto:
         with conexao_gerenciada() as con:
             cursor = con.execute("DELETE FROM produtos WHERE id = ?", (produto_id,))
             return cursor.rowcount > 0
+        
+
+class RepositorioUsuario:
+    def obter_usuario_por_username(self, username: str) -> dict:
+        with conexao_gerenciada() as con:
+            cursor = con.execute("SELECT * FROM usuarios WHERE username = ?", (username,))
+            row = cursor.fetchone()
+            return dict(row) if row else None
+        
