@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException, Depends, status, Security
 from fastapi.security import OAuth2PasswordRequestForm, SecurityScopes
+from fastapi.middleware.cors import CORSMiddleware
 from typing import List
 from models import Produto, ProdutoCriar, ProdutoAtualizar, Token
 from database import inicializar_banco
@@ -10,6 +11,16 @@ from security import oauth2_scheme, verificar_senha, criar_token_acesso, verific
 app = FastAPI(title = "API de Produtos Autenticada",
               version = "1.0.0",
               description = "API para gerenciamento de produtos com autenticação via OAuth2"
+)
+
+origins = ["*"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins, # Somente estes endereços entram
+    allow_credentials=True,
+    allow_methods=["*"], # Permite todos os métodos (GET, POST, etc)
+    allow_headers=["*"], # Permite todos os cabeçalhos
 )
 
 def obter_servico_produto():

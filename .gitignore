@@ -216,3 +216,4 @@ env
 database.db
 .db
 database.db
+.vscode/settings.json
