@@ -49,13 +49,16 @@ def inicializar_banco():
                         hashed_password TEXT NOT NULL
                     );
                     """)
-        
-        con.execute("""
-                        INSERT INTO usuarios (username, hashed_password) VALUES (?, ?)
-                        """, ("admin", obter_hash_senha(PASSWORD_ADMIN))
-                        )
-            
-        con.execute("""
-                        INSERT INTO usuarios (username, hashed_password) VALUES (?, ?)
-                        """, ("usuario", obter_hash_senha(PASSWORD_ADMIN))
-                        )
+        try:  
+            con.execute("""
+                            INSERT INTO usuarios (username, hashed_password) VALUES (?, ?)
+                            """, ("admin", obter_hash_senha(PASSWORD_ADMIN))
+                            )
+                
+            con.execute("""
+                            INSERT INTO usuarios (username, hashed_password) VALUES (?, ?)
+                            """, ("usuario", obter_hash_senha(PASSWORD_ADMIN))
+                            )
+        except sqlite3.IntegrityError:
+            # Usuário já existe, ignoramos o erro
+            pass
