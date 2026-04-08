@@ -1,3 +1,10 @@
+"""
+Os serviços são responsáveis por conter a lógica de negócio da aplicação. 
+Eles atuam como uma camada intermediária entre os controladores (endpoints) 
+e os repositórios (acesso a dados).
+A ideia é que os serviços sejam responsáveis por orquestrar as operações,
+validar regras de negócio, e garantir a integridade dos dados.
+"""
 
 from typing import List
 from models import Produto, ProdutoCriar, ProdutoAtualizar
