@@ -20,6 +20,42 @@ class ProdutoBase(BaseModel):
             raise ValueError("Nome do produto não pode ser vazio.")
         return value.strip()
     
+    @field_validator("nome")
+    def nome_tamanho_minimo(cls, value):
+        if len(value) < 3:
+            raise ValueError("Nome do produto deve ter pelo menos 3 caracteres.")
+        return value.strip()
+    
+    @field_validator("nome")
+    def nome_tamanho_maximo(cls, value):
+        if len(value) > 100:
+            raise ValueError("Nome do produto deve ter no máximo 100 caracteres.")
+        return value.strip()
+    
+    @field_validator("preco")
+    def preco_positivo(cls, value):
+        if value <= 0:
+            raise ValueError("Preço do produto deve ser um valor positivo.")
+        return value
+    
+    @field_validator("preco")
+    def preco_decimais(cls, value):
+        if round(value, 2) != value:
+            raise ValueError("Preço do produto deve ter no máximo 2 casas decimais.")
+        return value
+    
+    @field_validator("preco")
+    def preco_limite(cls, value):
+        if value > 10000:
+            raise ValueError("Preço do produto deve ser menor ou igual a 10.000.")
+        return value
+    
+    @field_validator("descricao")
+    def descricao_tamanho_maximo(cls, value):
+        if value and len(value) > 500:
+            raise ValueError("Descrição do produto deve ter no máximo 500 caracteres.")
+        return value.strip() if value else value
+    
 class ProdutoCriar(ProdutoBase):
     pass
 
