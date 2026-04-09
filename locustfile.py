@@ -16,7 +16,7 @@ class UsuarioAPI(HttpUser):
 
     def login(self):
         # Substitua pelas credenciais que você criou no banco
-        response = self.client.post("/token", data={
+        response = self.client.post("/api/v1/token", data={
             "username": "admin",
             "password": PASSWORD_ADMIN
         })
@@ -27,7 +27,7 @@ class UsuarioAPI(HttpUser):
 
     @task(3) # Peso 3: esta tarefa será executada com mais frequência
     def listar_produtos(self):
-        self.client.get("/produtos")
+        self.client.get("/api/v1/produtos")
 
     @task(1) # Peso 1: tarefa menos frequente
     def ver_raiz(self):

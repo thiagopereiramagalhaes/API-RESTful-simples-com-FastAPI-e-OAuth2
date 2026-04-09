@@ -46,4 +46,4 @@ filterwarnings = [
 ]
 
 [tool.setuptools]
-py-modules = ["database", "main", "models", "repository", "security", "services"]
+packages = ["app"]
