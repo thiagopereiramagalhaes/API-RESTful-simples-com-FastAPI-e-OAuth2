@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "api-restful-fastapi-oauth2"
+version = "1.0.0"
+description = "API para gerenciamento de produtos com autenticação via OAuth2 utilizando FastAPI."
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [
+    { name = "Thiago Pereira Magalhães" }
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Framework :: FastAPI",
+    "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
+]
+
+# Dependências principais necessárias para rodar a aplicação
+dependencies = [
+    "fastapi>=0.110.0",
+    "uvicorn>=0.28.0",
+    "pydantic>=2.0.0",
+    "python-dotenv>=1.0.0",
+    "python-multipart>=0.0.9",       # Necessário para formulários de login do OAuth2
+    "passlib[bcrypt]>=1.7.4",        # Necessário para hash de senhas (criptografia)
+    "bcrypt==3.2.2",                 # Compatibilidade obrigatória para a biblioteca passlib não gerar erro AssertionError/AttributeError
+    "python-jose[cryptography]>=3.3.0" # Necessário para gerar e validar os tokens JWT
+]
+
+[project.optional-dependencies]
+# Dependências de desenvolvimento e testes
+dev = [
+    "pytest>=8.0.0",
+    "httpx>=0.27.0",                 # Necessário para o TestClient do FastAPI funcionar corretamente
+    "locust>=2.24.0"                 # Teste de carga e performance
+]
+
+[tool.pytest.ini_options]
+testpaths = ["."]
+python_files = ["test_*.py", "*_test.py"]
+filterwarnings = [
+    "ignore::DeprecationWarning:passlib.*",
+    "ignore::pydantic.PydanticDeprecatedSince20"
+]
+
+[tool.setuptools]
+py-modules = ["database", "main", "models", "repository", "security", "services"]
