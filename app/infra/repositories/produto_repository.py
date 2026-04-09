@@ -1,36 +1,43 @@
 from typing import List, Optional
+from sqlalchemy.orm import Session
 from app.domain.models import ProdutoRead
-from app.infra.database import conexao_gerenciada
+from app.infra.models_db import ProdutoDB
 
 class RepositorioProduto:
+    def __init__(self, db: Session):
+        self.db = db
     
     def listar(self) -> List[ProdutoRead]:
-        with conexao_gerenciada() as con:
-            cursor = con.execute("SELECT * FROM produtos ORDER BY id")
-            return [ProdutoRead(**dict(row)) for row in cursor.fetchall()]
+        resultados = self.db.query(ProdutoDB).all()
+        return [ProdutoRead.model_validate(p) for p in resultados]
         
     def obter_por_id(self, produto_id: int) -> Optional[ProdutoRead]:
-        with conexao_gerenciada() as con:
-            cursor = con.execute("SELECT * FROM produtos WHERE id = ?", (produto_id,))
-            row = cursor.fetchone()
-            return ProdutoRead(**dict(row)) if row else None
+        produto = self.db.query(ProdutoDB).filter(ProdutoDB.id == produto_id).first()
+        if produto:
+            return ProdutoRead.model_validate(produto)
+        return None
     
     def criar(self, nome: str, preco: float, descricao: Optional[str]) -> ProdutoRead:
-        with conexao_gerenciada() as con:
-            cursor = con.execute("INSERT INTO produtos (nome, preco, descricao) VALUES (?, ?, ?)", (nome, preco, descricao))
-            novo_id = cursor.lastrowid
-            return ProdutoRead(id=novo_id, nome=nome, preco=preco, descricao=descricao) 
+        novo_produto = ProdutoDB(nome=nome, preco=preco, descricao=descricao)
+        self.db.add(novo_produto)
+        self.db.commit()
+        self.db.refresh(novo_produto)
+        return ProdutoRead.model_validate(novo_produto)
         
     def atualizar(self, produto_id: int, nome: str, preco: float, descricao: Optional[str]) -> bool:
-        with conexao_gerenciada() as con:
-            cursor = con.execute("""
-                                 UPDATE produtos
-                                    SET nome = ?, preco = ?, descricao = ?
-                                    WHERE id = ?
-                                 """, (nome, preco, descricao, produto_id))
-            return cursor.rowcount > 0
+        produto = self.db.query(ProdutoDB).filter(ProdutoDB.id == produto_id).first()
+        if produto:
+            produto.nome = nome
+            produto.preco = preco
+            produto.descricao = descricao
+            self.db.commit()
+            return True
+        return False
         
     def excluir(self, produto_id: int) -> bool:
-        with conexao_gerenciada() as con:
-            cursor = con.execute("DELETE FROM produtos WHERE id = ?", (produto_id,))
-            return cursor.rowcount > 0
+        produto = self.db.query(ProdutoDB).filter(ProdutoDB.id == produto_id).first()
+        if produto:
+            self.db.delete(produto)
+            self.db.commit()
+            return True
+        return False

@@ -5,6 +5,24 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from app.core.config import settings
 
+# --- Brute Force Protection Tracker ---
+FALHAS_DE_LOGIN_POR_IP = {}
+MAX_FALHAS = 5
+
+def registrar_tentativa_falha(ip: str):
+    if ip not in FALHAS_DE_LOGIN_POR_IP:
+        FALHAS_DE_LOGIN_POR_IP[ip] = 0
+    FALHAS_DE_LOGIN_POR_IP[ip] += 1
+
+def limpar_tentativas(ip: str):
+    if ip in FALHAS_DE_LOGIN_POR_IP:
+        del FALHAS_DE_LOGIN_POR_IP[ip]
+
+def ip_bloqueado(ip: str) -> bool:
+    return FALHAS_DE_LOGIN_POR_IP.get(ip, 0) >= MAX_FALHAS
+
+# --- Core Security ---
+
 # Contexto para hash de senhas
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -62,6 +80,9 @@ async def verificar_permissoes(request: Request, security_scopes: SecurityScopes
                     detail="Não tem permissão suficiente",
                     headers={"WWW-Authenticate": authenticate_value},
                 )
+                
+        # Injecta dinamicamente a propriedade '_current_user' originária do verify para repassar no Depends downstream.
+        request.state.current_user = username
         return username
     except JWTError:
         raise HTTPException(status_code=401, detail="Token inválido")

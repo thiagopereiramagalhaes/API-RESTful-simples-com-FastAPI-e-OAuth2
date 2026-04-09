@@ -2,28 +2,45 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
+from sqlalchemy.exc import IntegrityError
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 from app.api.v1.endpoints import produtos, auth
-from app.infra.database import inicializar_banco
+from app.infra.database import engine, Base, SessionLocal
 from app.infra.repositories.usuario_repository import RepositorioUsuario
 from app.domain.exceptions import ErroDeNegocio
 from app.core.config import settings
+from app.core.middlewares import SecurityHeadersMiddleware
+from app.core.rate_limit import limiter
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Inicializa banco de dados e usuários padrão
-    inicializar_banco()
-    repo_usuario = RepositorioUsuario()
-    repo_usuario.inicializar_usuarios_padrao()
+    # Inicializa banco de dados com SQLAlchemy
+    Base.metadata.create_all(bind=engine)
+    
+    # Inicializar usuários padrão usando SQLAlchemy Session
+    db = SessionLocal()
+    try:
+        repo_usuario = RepositorioUsuario(db)
+        repo_usuario.inicializar_usuarios_padrao()
+    finally:
+        db.close()
+        
     yield
 
 app = FastAPI(
-    title="API de Produtos Autenticada (Clean Architecture)",
-    version="2.0.0",
-    description="API para gerenciamento de produtos refinada sob Clean Architecture e OAuth2",
+    title="API de Produtos Autenticada (Clean Arch + SQLAlchemy + Advanced Security)",
+    version="3.0.0",
+    description="API para produtos robusta, mitigando slow brute force e aplicando boas praticas ORM",
     lifespan=lifespan
 )
 
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# Middlewares
+app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -52,10 +69,18 @@ async def erro_de_negocio_handler(request: Request, exc: ErroDeNegocio):
         )
         
     return JSONResponse(
-        status_code=400, # Para regras de negócio padrão
+        status_code=400, 
         content={"detail": str(exc)},
     )
     
+# Tratamento de Integridade Global SQLAlchemy (Unique fields, etc)
+@app.exception_handler(IntegrityError)
+async def integrity_handler(request: Request, exc: IntegrityError):
+    return JSONResponse(
+        status_code=400,
+        content={"detail": "Erro de integridade de Banco de Dados. Geralmente conflito ou violação de Unique."},
+    )
+
 @app.get("/", tags=["Main"])
 def main():
-    return {"message": "Bem-vindo à API de Produtos (V2 - Clean Architecture)! Consulte /docs para testar no Swagger"}
+    return {"message": "Bem-vindo à API de Produtos (V3)! Consulte /docs para testar no Swagger"}

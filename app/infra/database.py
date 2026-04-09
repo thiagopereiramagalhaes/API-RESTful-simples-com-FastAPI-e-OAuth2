@@ -1,41 +1,20 @@
-import sqlite3
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, declarative_base
 from pathlib import Path
-from contextlib import contextmanager
 
 CAMINHO_BANCO = Path(__file__).parent.parent.parent / "database.db"
+SQLALCHEMY_DATABASE_URL = f"sqlite:///{CAMINHO_BANCO}"
 
-def obter_conexao():
-    con = sqlite3.connect(CAMINHO_BANCO, check_same_thread=False)
-    con.row_factory = sqlite3.Row
-    return con
+engine = create_engine(
+    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
+)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-@contextmanager
-def conexao_gerenciada():
-    con = obter_conexao()
+Base = declarative_base()
+
+def get_db():
+    db = SessionLocal()
     try:
-        yield con
-        con.commit()
-    except Exception:
-        con.rollback()
-        raise
+        yield db
     finally:
-        con.close()
-
-def inicializar_banco():
-    with conexao_gerenciada() as con:
-        con.execute(""" 
-                    CREATE TABLE IF NOT EXISTS produtos(
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        nome TEXT NOT NULL,
-                        preco REAL NOT NULL,
-                        descricao TEXT
-                    );
-                    """)
-        
-        con.execute(""" 
-                    CREATE TABLE IF NOT EXISTS usuarios(
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        username TEXT NOT NULL UNIQUE,
-                        hashed_password TEXT NOT NULL
-                    );
-                    """)
+        db.close()
