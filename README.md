@@ -37,6 +37,25 @@ D:\API-RESTful-simples-com-FastAPI...
 > 💡 **Por que fazemos assim?**
 > A dissociação nos impede de misturar validação de dados de entrada (`request HTTP`) com manipulação das tabelas (`DB Query`). Quando usamos Pydantic para validação HTTP e SQLAlchemy para o Banco, sem a camada `services/` ou `repositories/`, mudarmos no futuro o banco para Postgres ou MongoDB demandaria quebrar todo o core do Endpoits/Router. Encapsulamos a vida util da tecnologia na "borda" permitindo que regras de negócio persistam intactas, puras em python.
 
+### Entendendo as Camadas:
+Para garantir a escalabilidade e a manutenção a longo prazo, este projeto adota os princípios da Clean Architecture, mas faz uma adaptação consciente aos padrões estabelecidos pela comunidade do FastAPI.
+
+Abaixo, detalhamos a responsabilidade de cada diretório:
+
+* app/domain/ (O Verdadeiro Núcleo de Negócios): Na teoria purista da Clean Architecture, o "core" é o domínio da aplicação. Aqui, essa camada contém as estruturas de dados fundamentais independentes de tecnologia externa. Estão localizados os DTOs validados via Pydantic (models.py) e as Exceções Customizadas (exceptions.py) que representam as regras intransigíveis do negócio.
+
+* app/services/ (Casos de Uso): É o cérebro das operações. Os serviços recebem as injeções de dependência da infraestrutura (como os repositórios) e executam a lógica de negócio. Eles garantem que a apresentação (API) não contenha regras corporativas e que o banco de dados não dite o comportamento da aplicação.
+
+* app/api/ (Camada de Apresentação HTTP): Lida exclusivamente com o tráfego da web. Define os endpoints, recebe os requests, repassa os dados para a camada de serviços processar e devolve os responses formatados. Não possui conhecimento sobre SQL ou regras de validação profundas.
+
+* app/infra/ (Infraestrutura e Persistência): A camada mais externa e volátil. É responsável por falar com o mundo externo, focando especificamente na persistência de dados. Contém os arquivos do banco de dados, os modelos declarativos do SQLAlchemy (models_db.py) e os Repositórios que isolam as consultas SQL (query) do resto do sistema.
+
+**⚠️ Nota Importante sobre a camada app/core/:**
+
+Se você é um estudioso purista da Clean Architecture (Uncle Bob), pode achar estranho encontrar JWT, limitadores de taxa e middlewares dentro de uma pasta chamada "Core" (que teoricamente deveria ser agnóstica de tecnologia).
+
+No entanto, este projeto segue a convenção oficial da comunidade FastAPI. Neste contexto, o diretório core/ atua como uma camada transversal de configurações centrais do framework, e não como o núcleo das regras de negócio (papel exercido pelo domain). É no core/ que alocamos a base operacional da tecnologia web, como o motor de segurança (security.py), proteção de endpoints (middlewares.py), limitadores de fluxo de rede (rate_limit.py) e configurações de ambiente (config.py).
+
 ### Fluxo de Requisição (Mermaid Workflow)
 
 ```mermaid
