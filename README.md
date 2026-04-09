@@ -1,5 +1,5 @@
 # API RESTful Autenticada – Clean Architecture & FastAPI
-> **Um Padrão Ouro para Microsserviços Escaláveis e Seguros.**
+> **Um Padrão para Microsserviços Escaláveis e Seguros.**
 
 [![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com/)
 [![Pydantic v2](https://img.shields.io/badge/Pydantic-E92063?style=for-the-badge&logo=pydantic&logoColor=white)](https://pydantic.dev/)
